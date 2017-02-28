@@ -46,6 +46,7 @@ if (window.ApplePaySession) {
       details: PaymentDetails,
       options: PaymentOptions
     ) {
+      let methodSpecified = false;
       this.paymentRequest = {
         countryCode: '',
         currencyCode: '',
@@ -83,8 +84,13 @@ if (window.ApplePaySession) {
 
           this.validationEndpoint = method.data.validationEndpoint;
           this.merchantIdentifier = method.data.merchantIdentifier;
+          methodSpecified = true;
           break;
         }
+      }
+
+      if (!methodSpecified) {
+        throw 'Payment method not specified for Apple Pay.';
       }
 
       // details
