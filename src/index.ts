@@ -12,20 +12,15 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/// <reference path="./payment-request.d.ts"/>
-/// <reference path="./apple-pay-js.d.ts"/>
-
-let PR = window.PaymentRequest;
-
 export let PaymentRequest;
 
-if (window.ApplePaySession) {
+if (ApplePaySession) {
   PaymentRequest = class {
-    private paymentRequest: ApplePayJS.PaymentRequest;
+    private paymentRequest: ApplePayJS.ApplePayPaymentRequest;
     public paymentRequestID: string = '';
     public shippingAddress: PaymentAddress = null;
     public shippingOption: string = '';
-    public shippingType: PaymentShippingType = 'shipping';
+    public shippingType: string = 'shipping';
     private session: ApplePaySession;
     private paymentResolver = null;
     private paymentRejector = null;
@@ -58,7 +53,7 @@ if (window.ApplePaySession) {
         requiredBillingContactFields: [],
         requiredShippingContactFields: [],
         shippingContact: null,
-        shippingMethods: [],
+        shippingMethods: <ApplePayJS.ApplePayShippingMethod[]>[],
         shippingType: 'shipping',
       };
 
@@ -148,7 +143,7 @@ if (window.ApplePaySession) {
           if (!codes) {
             this.paymentRequest.currencyCode = item.amount.currency;
           }
-          let lineItem: LineItem = {
+          let lineItem: ApplePayJS.ApplePayLineItem = {
             type: item.pending === true ? 'pending' : 'final',
             label: item.label,
             amount: item.amount.value
@@ -158,9 +153,9 @@ if (window.ApplePaySession) {
       }
 
       if (details.shippingOptions) {
-        this.paymentRequest.shippingMethods = [];
+        this.paymentRequest.shippingMethods = <ApplePayJS.ApplePayShippingMethod[]>[];
         for (let option of details.shippingOptions) {
-          let shippingMethod: ShippingMethod = {
+          let shippingMethod: ApplePayJS.ApplePayShippingMethod = {
             label: option.label,
             detail: option.label,
             amount: option.amount.value,
@@ -180,17 +175,17 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {PaymentMethod} paymentMethod
+     * @param  {ApplePayJS.ApplePayPaymentMethod} paymentMethod
      */
-    private updatePaymentMethod(paymentMethod: PaymentMethod) {
+    private updatePaymentMethod(paymentMethod: ApplePayJS.ApplePayPaymentMethod) {
 
     }
 
     /**
-     * @param  {PaymentContact} shippingContact
+     * @param  {ApplePayJS.ApplePayPaymentContact} shippingContact
      */
-    private convertShippingContact(contact: PaymentContact): PaymentAddress {
-      return {
+    private convertShippingContact(contact: ApplePayJS.ApplePayPaymentContact): PaymentAddress {
+      let address = {
         country:            contact.countryCode || '',
         addressLine:        contact.addressLines || [],
         region:             contact.administrativeArea || '',
@@ -203,12 +198,13 @@ if (window.ApplePaySession) {
         recipient:          `${contact.givenName} ${contact.familyName}`,
         phone:              contact.phoneNumber || ''
       }
+      return <PaymentAddress>address;
     }
 
     /**
-     * @param  {ShippingMethod} shippingMethod
+     * @param  {ApplePayJS.ApplePayShippingMethod} shippingMethod
      */
-    private convertShippingMethod(shippingMethod: ShippingMethod): string {
+    private convertShippingMethod(shippingMethod: ApplePayJS.ApplePayShippingMethod): string {
       for (let method of this.paymentRequest.shippingMethods) {
         if (shippingMethod.identifier === method.identifier) {
           return method.identifier;
@@ -223,7 +219,7 @@ if (window.ApplePaySession) {
     public show(): Promise<PaymentResponse> {
       this.session.begin();
       return new Promise((resolve, reject) => {
-        this.paymentResolver = (response: Payment) => {
+        this.paymentResolver = (response: ApplePayJS.ApplePayPayment) => {
           resolve(response);
         };
         this.paymentRejector = (error: Error) => {
@@ -252,12 +248,12 @@ if (window.ApplePaySession) {
       }
     }
 
-    public completeMerchantValidation(merchantSession: MerchantSession): void {
+    public completeMerchantValidation(merchantSession: any): void {
       // https://developer.apple.com/reference/applepayjs/applepaysession/1778015-completemerchantvalidation
       this.session.completeMerchantValidation(merchantSession);
     }
 
-    public completePaymentMethodSelection(newTotal: LineItem, newLineItems: LineItem[]): void {
+    public completePaymentMethodSelection(newTotal: ApplePayJS.ApplePayLineItem, newLineItems: ApplePayJS.ApplePayLineItem[]): void {
       // https://developer.apple.com/reference/applepayjs/applepaysession/1777995-completepaymentmethodselection
       this.session.completePaymentMethodSelection(newTotal, newLineItems);
     }
@@ -279,10 +275,12 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayValidMerchantEvent} e
+     * @param  {ApplePayJS.ApplePayValidMerchantEvent} e
      * @returns void
      */
-    private onValidateMerchant(e: ApplePayValidateMerchantEvent): void {
+    private onValidateMerchant(
+      e: ApplePayJS.ApplePayValidateMerchantEvent
+    ): void {
       e.stopPropagation();
       // https://developer.apple.com/reference/applepayjs/applepaysession/1778021-onvalidatemerchant
       if (this['onvalidatemerchant']) {
@@ -301,7 +299,7 @@ if (window.ApplePaySession) {
             throw 'Merchant validation error.';
           }
         }).then((merchantSession: any) => {
-          this.completeMerchantValidation(<MerchantSession>merchantSession);
+          this.completeMerchantValidation(merchantSession);
         }).catch(error => {
           throw error;
         });
@@ -309,10 +307,12 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayPaymentMethodSelectedEvent} e
+     * @param  {ApplePayJS.ApplePayPaymentMethodSelectedEvent} e
      * @returns void
      */
-    private onPaymentMethodSelected(e: ApplePayPaymentMethodSelectedEvent): void {
+    private onPaymentMethodSelected(
+      e: ApplePayJS.ApplePayPaymentMethodSelectedEvent
+    ): void {
       e.stopPropagation();
       // https://developer.apple.com/reference/applepayjs/applepaysession/1778013-onpaymentmethodselected
       if (this['onpaymentmethodselected']) {
@@ -325,11 +325,11 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayShippingContactSelectedEvent} e
+     * @param  {ApplePayJS.ApplePayShippingContactSelectedEvent} e
      * @returns void
      */
     private onShippingAddressChange(
-      e: ApplePayShippingContactSelectedEvent
+      e: ApplePayJS.ApplePayShippingContactSelectedEvent
     ): void {
       if (!this['onshippingaddresschange']) return;
       e.stopPropagation();
@@ -364,11 +364,11 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayShippingMethodSelectedEvent} e
+     * @param  {ApplePayJS.ApplePayShippingMethodSelectedEvent} e
      * @returns void
      */
     private onShippingOptionChange(
-      e: ApplePayShippingMethodSelectedEvent
+      e: ApplePayJS.ApplePayShippingMethodSelectedEvent
     ): void {
       if (!this['onshippingoptionchange']) return;
       e.stopPropagation();
@@ -393,10 +393,12 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayPaymentAuthorizedEvent} e
+     * @param  {ApplePayJS.ApplePayPaymentAuthorizedEvent} e
      * @returns void
      */
-    private onPaymentAuthorized(e: ApplePayPaymentAuthorizedEvent): void {
+    private onPaymentAuthorized(
+      e: ApplePayJS.ApplePayPaymentAuthorizedEvent
+    ): void {
       if (this.paymentResolver) {
         // https://developer.apple.com/reference/applepayjs/payment
         this.paymentResolver(e.payment);
@@ -417,10 +419,10 @@ if (window.ApplePaySession) {
     }
 
     /**
-     * @param  {PaymentComplete} result
+     * @param  {'success' | 'fail' | 'unknown'} result
      * @returns void
      */
-    private onPaymentComplete(result: PaymentComplete): void {
+    private onPaymentComplete(result: 'success' | 'fail' | 'unknown'): void {
       if (result === 'success' ||
           result === 'fail' ||
           result === 'unknown') {
@@ -444,6 +446,4 @@ if (window.ApplePaySession) {
       }
     }
   }
-} else {
-  PaymentRequest = PR;
 }
