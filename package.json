@@ -1,3 +1,17 @@
+//    Copyright 2017 Google
+//
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+//
+//        http://www.apache.org/licenses/LICENSE-2.0
+//
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
 {
   "name": "appr-wrapper",
   "version": "1.0.0",
@@ -11,9 +25,9 @@
   "author": "Eiji Kitamura <agektmr@google.com>",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/applepayjs": "^1.0.1",
     "@types/chai": "^3.4.34",
     "@types/mocha": "^2.2.38",
-    "@types/whatwg-fetch": "^0.0.33",
     "chai": "^3.5.0",
     "gulp": "^3.9.1",
     "gulp-webpack": "^1.5.0",
@@ -23,7 +37,6 @@
     "webpack-stream": "^3.2.0"
   },
   "dependencies": {
-    "@types/applepayjs": "^1.0.1",
     "body-parser": "^1.16.1",
     "express": "^4.14.0",
     "fs": "^0.0.1-security",

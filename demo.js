@@ -20,8 +20,8 @@ const request = require('request');
 
 const APPLE_PAY_CERTIFICATE_PATH = "./certs/apple-pay-cert.pem";
 const MERCHANT_IDENTIFIER = "merchant.com.agektmr.payment";
-const MERCHANT_DOMAIN = "web-payment-apis.appspot-preview.com";
-const MERCHANT_DIAPLAY_NAME = "web-payment-apis.appspot-preview.com";
+const MERCHANT_DOMAIN = "web-payment-apis.appspot.com";
+const MERCHANT_DIAPLAY_NAME = "web-payment-apis.appspot.com";
 
 try {
   fs.accessSync(APPLE_PAY_CERTIFICATE_PATH);
