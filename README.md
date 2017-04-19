@@ -17,7 +17,7 @@
 # appr-wrapper: Payment Request wrapper for Apple Pay JS
 This library allows you to write Payment Request API code to support Apple Pay JS.
 
-[See how it works at a demo here](https://web-payment-apis.appspot-preview.com/).
+[See how it works at a demo here](https://web-payment-apis.appspot.com/).
 ## Usage
 Pull dependencies
     npm install
