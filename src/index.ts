@@ -438,6 +438,9 @@ if (ApplePaySession) {
             // TODO: What to do if dev indicates 'unknown'?
             status = ApplePaySession.STATUS_FAILURE;
             break;
+          default:
+            status = ApplePaySession.STATUS_FAILURE;
+            break;
         }
         // https://developer.apple.com/reference/applepayjs/applepaysession/1778012-completepayment
         this.session.completePayment(status);

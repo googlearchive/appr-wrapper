@@ -18,6 +18,7 @@ const fs = require('fs');
 const bodyParser = require('body-parser');
 const request = require('request');
 
+// Replace these params based on your own configuration
 const APPLE_PAY_CERTIFICATE_PATH = "./certs/apple-pay-cert.pem";
 const MERCHANT_IDENTIFIER = "merchant.com.agektmr.payment";
 const MERCHANT_DOMAIN = "web-payment-apis.appspot.com";
@@ -68,3 +69,5 @@ app.post('/applepay/validate/', function (req, res) {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT);
+
+console.log(`serving from port ${PORT}`);
