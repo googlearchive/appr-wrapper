@@ -22,7 +22,7 @@ Try [a demo](https://web-payment-apis.appspot.com/) from Safari on iOS and
 Chrome for Android. See that it works on both platforms in a single code base.
 
 ## Build the code
-The repo comes with a built script (`./dist/appr.js`) but in case you want to
+The repo comes with a build script (`./dist/appr.js`) but in case you want to
 build one yourself, follow this instruction:
 
 Clone the repo
@@ -43,7 +43,7 @@ Build the code
 npm run build
 ```
 
-## Try the demo in your own server
+## Try the demo on your own server
 To try the demo on your own server, you need to go through Apple Pay JS merchant
 registration process. [Follow Apple's instructions and setup
 yours](https://developer.apple.com/reference/applepayjs). There are 3 things
@@ -55,7 +55,7 @@ required:
   `apple-pay-cert.pem` at project's root.
 * Modify `./demo.js` and replace params with your own configuration:
   `APPLE_PAY_CERTIFICATE_PATH`, `MERCHANT_IDENTIFIER`, `MERCHANT_DOMAIN`,
-  `MERCHANT_DIAPLAY_NAME`
+  `MERCHANT_DISPLAY_NAME`
 
 One the set up is done, run the server:
 
@@ -68,7 +68,7 @@ npm run serve
 `script` tag or `import` it via module loader.
 
 ```html
-<script src="./node_modules/appr/dist/appr.js"></script>
+<script src="./scripts/appr.js"></script>
 ```
  
 ```js
@@ -82,7 +82,56 @@ following [the standard](https://www.w3.org/TR/payment-request/). You can handle
 payment method specifying "`https://apple.com/apple-pay`" as following example:
 
 ```js
+let method = [{
+  supportedMethods: ['https://apple.com/apple-pay'],
+  data: {
+    supportedNetworks: [
+      'amex', 'discover', 'masterCard', 'visa'
+    ],
+    countryCode: 'US',
+    validationEndpoint: '/applepay/validate/',
+    merchantIdentifier: 'merchant.com.agektmr.payment'
+  }
+}];
+
+let details = {
+  displayItems: [{
+    label: 'Original donation amount',
+    amount: { currency: 'USD', value: '0.01' }
+  }],
+  shippingOptions: [{
+    id: 'standard',
+    label: 'Standard shipping',
+    amount: { currency: 'USD', value: '0.01' }
+  }, {
+    id: 'express',
+    label: 'Express shipping',
+    amount: { currency: 'USD', value: '0.99' }
+  }],
+  total: {
+    label: 'Total due',
+    amount: { currency: 'USD', value : '0.01' }
+  }
+};
+
+let options = {
+  requestShipping: true,
+  requestPayerEmail: true,
+  requestPayerPhone: true,
+  requestPayerName: true,
+  shippingType: 'shipping'
+};
+
 let request = new PaymentRequest(methods, details, options);
+
+request.show().then(result => {
+  // process payment
+}).then(response => {
+  response.complete('success');
+}).catch(e => {
+  console.error(e);
+});
+
 ```
 
 ### Payment method properties
@@ -122,7 +171,7 @@ let method = [{
 ### Payment details properties
 The second argument to the `PaymentRequest` constructor.
 
-* The first `displayItem`'s `amount.currency` is converted to
+* The `total.amount.currency` is converted to
   [currencyCode](https://developer.apple.com/reference/applepayjs/paymentrequest/1916118-currencycode)
   in Apple Pay JS.
 
@@ -147,6 +196,8 @@ let details = {
   }
 };
 ```
+
+Let's look into what each parameters convert to, one by one.
 
 ### Payment options properties
 The third argument to the `PaymentRequest` constructor.
@@ -174,7 +225,11 @@ let options = {
 
 ```js
 request.canMakePayment().then(result => {
-  // ...
+  if (result) {
+    return request.show();
+  } else {
+    // fallback to checkout form
+  }
 });
 ```
 
