@@ -21,7 +21,8 @@
     "mocha": "^3.2.0",
     "ts-loader": "^2.0.0",
     "webpack": "^2.2.1",
-    "webpack-stream": "^3.2.0"
+    "webpack-stream": "^3.2.0",
+    "webpack-uglify-js-plugin": "^1.1.9"
   },
   "dependencies": {
     "body-parser": "^1.16.1",
@@ -29,7 +30,6 @@
     "fs": "^0.0.1-security",
     "path": "^0.12.7",
     "request": "^2.79.0",
-    "webpack-uglify-js-plugin": "^1.1.9",
     "whatwg-fetch": "^2.0.2"
   }
 }

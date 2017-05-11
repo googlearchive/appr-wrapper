@@ -136,13 +136,9 @@ if (ApplePaySession) {
      * @param  {PaymentDetails} details
      */
     private updatePaymentDetails(details: PaymentDetails) {
-      let codes = false;
       if (details.displayItems) {
-        this.paymentRequest.lineItems = [];
+        this.paymentRequest.lineItems = <ApplePayJS.ApplePayLineItem[]>[];
         for (let item of details.displayItems) {
-          if (!codes) {
-            this.paymentRequest.currencyCode = item.amount.currency;
-          }
           let lineItem: ApplePayJS.ApplePayLineItem = {
             type: item.pending === true ? 'pending' : 'final',
             label: item.label,
@@ -166,11 +162,14 @@ if (ApplePaySession) {
       }
 
       if (details.total) {
+        this.paymentRequest.currencyCode = details.total.amount.currency;
         this.paymentRequest.total = {
           type: details.total.pending === true ? 'pending' : 'final',
           label: details.total.label,
           amount: details.total.amount.value
         };
+      } else {
+        throw '`total` is required parameter for `PaymentDetails`.';
       }
     }
 
@@ -351,7 +350,6 @@ if (ApplePaySession) {
               this.paymentRequest.lineItems);
           }, (details: PaymentDetails) => {
             // TODO: In which case does this happen?
-            // https://developer.apple.com/reference/applepayjs/applepaysession/1778008-completeshippingcontactselection
             this.updatePaymentDetails(details);
             this.session.completeShippingContactSelection(
               ApplePaySession.STATUS_FAILURE,
@@ -387,6 +385,14 @@ if (ApplePaySession) {
               ApplePaySession.STATUS_SUCCESS,
               this.paymentRequest.total,
               this.paymentRequest.lineItems);
+          }, (details: PaymentDetails) => {
+            // TODO: In which case does this happen?
+            this.updatePaymentDetails(details);
+            this.session.completeShippingMethodSelection(
+              ApplePaySession.STATUS_FAILURE,
+              null,
+              null
+            );
           });
         }
       })
@@ -425,7 +431,8 @@ if (ApplePaySession) {
     private onPaymentComplete(result: 'success' | 'fail' | 'unknown'): void {
       if (result === 'success' ||
           result === 'fail' ||
-          result === 'unknown') {
+          result === 'unknown' ||
+          result === '') {
         let status: number;
         switch (result) {
           case 'success':
@@ -435,11 +442,14 @@ if (ApplePaySession) {
             status = ApplePaySession.STATUS_FAILURE;
             break;
           case 'unknown':
-            // TODO: What to do if dev indicates 'unknown'?
-            status = ApplePaySession.STATUS_FAILURE;
+            // TODO: Not sure what is the best way to handle this
+            // Treat is as success for the time being.
+            status = ApplePaySession.STATUS_SUCCESS;
             break;
           default:
-            status = ApplePaySession.STATUS_FAILURE;
+            // TODO: Not sure what is the best way to handle this
+            // Treat is as success for the time being.
+            status = ApplePaySession.STATUS_SUCCESS;
             break;
         }
         // https://developer.apple.com/reference/applepayjs/applepaysession/1778012-completepayment
