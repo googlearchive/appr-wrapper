@@ -123,15 +123,52 @@ let options = {
 };
 
 let request = new PaymentRequest(methods, details, options);
+let response;
+
+request.addEventListener('shippingaddresschange', e => {
+  e.updateWith(new Promise(resolve => {
+    let result;
+    let addr = request.shippingAddress;
+    let price = new priceCalc(details);
+    if (addr.country.toUpperCase() === 'US') {
+      result = price.selectShippingOption('standard');
+    } else if (addr.country.toUpperCase() === 'JP') {
+      result = price.selectShippingOption('express');
+    } else {
+      details.shippingOptions = [];
+      resolve(details);
+      return;
+    }
+    resolve(result);
+  }));
+});
+
+request.addEventListener('shippingoptionchange', e => {
+  e.updateWith(new Promise(resolve => {
+    let calc = new priceCalc(details);
+    let result = calc.selectShippingOption(request.shippingOption);
+    resolve(result);
+  }));
+});
 
 request.show().then(result => {
-  // process payment
+  if (response.methodName === 'https://apple.com/apple-pay') {
+    // Apple Pay JS case
+    // Do whatever you need to do with the token:
+    // `response.applePayRaw`
+  } else {
+    // Everything else will be pure Payment Request API response
+  }
 }).then(response => {
   response.complete('success');
 }).catch(e => {
-  console.error(e);
+  if (e) {
+    alert(`Could not make payment: ${e}`);
+  }
+  if (response) {
+    response.complete('fail');
+  }
 });
-
 ```
 
 ### Payment method properties
@@ -228,15 +265,80 @@ request.canMakePayment().then(result => {
   if (result) {
     return request.show();
   } else {
-    // fallback to checkout form
+    // fallback to checkout form or start setting up ApplePayJS
   }
 });
 ```
 
 ### Shipping contact selected event / shipping method selected event
 You can handle
-* `shippingcontactselected` event in Apple Pay JS as `shippingaddresschange`
-  event in Payment Request.
-* `shippingmethodselected` event in Apple Pay JS as `shippingoptionchange` event
-  in Payment Request.
+* [`shippingcontactselected`](https://developer.apple.com/reference/applepayjs/applepayshippingcontactselectedevent)
+  event in Apple Pay JS as `shippingaddresschange` event in Payment Request.
+* [`shippingmethodselected`](https://developer.apple.com/reference/applepayjs/applepayshippingmethodselectedevent)
+  event in Apple Pay JS as `shippingoptionchange` event in Payment Request.
 
+```js
+request.addEventListener('shippingaddresschange', e => {
+  e.updateWith(new Promise(resolve => {
+    let result;
+    let addr = request.shippingAddress;
+    let price = new priceCalc(details);
+    if (addr.country.toUpperCase() === 'US') {
+      result = price.selectShippingOption('standard');
+    } else if (addr.country.toUpperCase() === 'JP') {
+      result = price.selectShippingOption('express');
+    } else {
+      details.shippingOptions = [];
+      resolve(details);
+      return;
+    }
+    resolve(result);
+  }));
+});
+
+request.addEventListener('shippingoptionchange', e => {
+  e.updateWith(new Promise(resolve => {
+    let calc = new priceCalc(details);
+    let result = calc.selectShippingOption(request.shippingOption);
+    resolve(result);
+  }));
+});
+```
+
+### Handling payment response
+Once `show()` resolves, you will recive an object which is slightly different
+from actual `PaymentResponse` object. Equivalent to this resolution is
+[`paymentauthorized`](https://developer.apple.com/reference/applepayjs/applepaypaymentauthorizedevent)
+event where you will receive an event object that contains an
+[`ApplePayPayment`](https://developer.apple.com/reference/applepayjs/applepaypayment)
+object in Apple Pay JS.
+
+To determine if the response is for Apple Pay JS, you can examine `methodName`
+property of the payment response. If it is "`https://apple.com/apple-pay`", this
+is Apple Pay JS. The payment response object is constructed to replicate
+`PaymentResponse` as much as possible, but it's not perfect due to technical
+restrictions. If you prefer using actual payment response from Apple Pay JS API,
+try `applePayRaw` property which holds actual `ApplePayPayment` object.
+
+```js
+request.show().then(result => {
+  // process payment
+  response = result;
+  if (response.methodName === 'https://apple.com/apple-pay') {
+    // Apple Pay JS case
+    // Do whatever you need to do with the token:
+    // `response.applePayRaw`
+  } else {
+    // Everything else will be pure Payment Request API response
+  }
+}).then(response => {
+  response.complete('success');
+}).catch(e => {
+  if (e) {
+    alert(`Could not make payment: ${e}`);
+  }
+  if (response) {
+    response.complete('fail');
+  }
+});
+```

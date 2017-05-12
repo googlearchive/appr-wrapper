@@ -65,7 +65,7 @@ function onBuyClicked(event) {
   // Stop the default anchor redirect.
   event.preventDefault();
 
-  var supportedInstruments = [{
+  let supportedInstruments = [{
     supportedMethods: ['basic-card'],
     data: {
       supportedNetworks: [
@@ -85,7 +85,7 @@ function onBuyClicked(event) {
     }
   }];
 
-  var details = {
+  let details = {
     displayItems: [{
       label: 'Original donation amount',
       amount: { currency: 'USD', value: '0.01' }
@@ -105,7 +105,7 @@ function onBuyClicked(event) {
     }
   };
 
-  var options = {
+  let options = {
     requestShipping: true,
     requestPayerEmail: true,
     requestPayerPhone: true,
@@ -114,7 +114,7 @@ function onBuyClicked(event) {
   };
 
   // Initialization
-  var request = new PaymentRequest(supportedInstruments, details, options);
+  let request = new PaymentRequest(supportedInstruments, details, options);
 
   // When user selects a shipping address
   request.addEventListener('shippingaddresschange', e => {
@@ -149,6 +149,8 @@ function onBuyClicked(event) {
     }));
   });
 
+  let response;
+
   request.canMakePayment().then(result => {
     if (result) {
       return request.show();
@@ -156,18 +158,32 @@ function onBuyClicked(event) {
       throw 'No payment method available.';
     }
   }).then(result => {
+    response = result;
+    if (response.methodName === 'https://apple.com/apple-pay') {
+      console.log('this is apple pay js');
+      console.log(response.applePayRaw);
+    } else {
+      console.log('this is pure PaymentRequest');
+      console.log(response);
+    }
+    // Emulate an interaction with a server
     setTimeout(() => {
-      result.complete('success');
+      response.complete('success');
       alert('payment successfully complete!');
     }, 2000);
   }).catch(function(err) {
-    alert('Can not make payment: ' + err);
+    if (err) {
+      alert(`Could not make payment: ${err}`);
+    }
+    if (response) {
+      response.complete('fail');
+    }
   });
 }
 
 // Assuming an anchor is the target for the event listener.
 window.addEventListener('DOMContentLoaded', function() {
-  var button = document.querySelector('#payment');
+  let button = document.querySelector('#payment');
   if (window.ApplePaySession) {
     button.classList.add('apple-pay-button');
   } else if (window.PaymentRequest) {
