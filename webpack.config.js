@@ -15,10 +15,10 @@
 const webpack = require('webpack');
 
 module.exports = {
-  entry: __dirname+"/src/index.ts",
+  entry: `${__dirname}/src/index.ts`,
   output: {
     libraryTarget: "umd",
-    path: __dirname+"/dist",
+    path: `${__dirname}/dist`,
     filename: "appr.js"
   },
   module: {

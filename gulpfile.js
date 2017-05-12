@@ -18,7 +18,7 @@ const webpackStream = require('webpack-stream');
 const webpackConfig = require('./webpack.config.js');
 
 gulp.task('default', ['build'], function() {
-  return gulp.src(['./dist/*'])
+  return gulp.src(['./dist/*.*', 'node_modules/whatwg-fetch/fetch.js'])
     .pipe(gulp.dest('./demo/js'));
 });
 
