@@ -14,7 +14,7 @@
 
 export let PaymentRequest;
 
-if (ApplePaySession) {
+if ((<any>window).ApplePaySession) {
   const APPLE_PAY_JS_IDENTIFIER = 'https://apple.com/apple-pay';
   PaymentRequest = class {
     private paymentRequest: ApplePayJS.ApplePayPaymentRequest;
