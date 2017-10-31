@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+const merchantId = 'merchant.com.agektmr.payment';
 
 let priceCalc = function(details) {
   this.details = details;
@@ -21,6 +22,7 @@ priceCalc.prototype.selectShippingOption = function(id) {
   let newShippingOption = null;
   let oldShippingOption = null;
 
+  // Pick new shipping option and clear selection
   for (let index in this.details.shippingOptions) {
     let option = this.details.shippingOptions[index];
     if (option.id === id) {
@@ -81,7 +83,7 @@ function onBuyClicked(event) {
       ],
       countryCode: 'US',
       validationEndpoint: '/applepay/validate/',
-      merchantIdentifier: 'merchant.com.agektmr.payment'
+      merchantIdentifier: merchantId
     }
   }];
 
@@ -151,9 +153,19 @@ function onBuyClicked(event) {
 
   let response;
 
+  if (event.target.classList.contains('apple-pay-set-up-button')) {
+    ApplePaySession.openPaymentSetup(merchantId).then(() => {
+      event.target.classList.remove('apple-pay-set-up-button');
+    });
+    return;
+  }
+
   request.canMakePayment().then(result => {
     if (result) {
       return request.show();
+    } else if (ApplePaySession && ApplePaySession.openPaymentSetup) {
+      event.target.classList.add('apple-pay-set-up-button');
+      throw '';
     } else {
       throw 'No payment method available.';
     }
