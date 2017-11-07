@@ -34,7 +34,11 @@ const cert = fs.readFileSync(APPLE_PAY_CERTIFICATE_PATH);
 
 const app = express();
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'demo')));
+app.use(express.static(path.join(__dirname, 'demo'), {
+  setHeaders: function(res, path, stat) {
+    res.set('Strict-Transport-Security', 'max-age=31536000');
+  }
+}));
 
 app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
   let file = fs.readFileSync('./demo/well-known/apple-developer-merchantid-domain-association');
