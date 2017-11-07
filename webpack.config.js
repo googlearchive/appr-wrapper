@@ -15,6 +15,7 @@
 const webpack = require('webpack');
 
 module.exports = {
+  devtool: 'source-map',
   entry: `${__dirname}/src/index.ts`,
   output: {
     libraryTarget: "umd",

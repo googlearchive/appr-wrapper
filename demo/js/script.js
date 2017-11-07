@@ -163,7 +163,7 @@ function onBuyClicked(event) {
   request.canMakePayment().then(result => {
     if (result) {
       return request.show();
-    } else if (ApplePaySession && ApplePaySession.openPaymentSetup) {
+    } else if (window.ApplePaySession && ApplePaySession.openPaymentSetup) {
       event.target.classList.add('apple-pay-set-up-button');
       throw '';
     } else {

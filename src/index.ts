@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+/// <reference path="../node_modules/@types/applepayjs/index.d.ts" />
+
 export let PaymentRequest;
 
 if ((<any>window).ApplePaySession) {
@@ -243,7 +245,7 @@ if ((<any>window).ApplePaySession) {
       return new Promise((resolve, reject) => {
         this.paymentResolver = (response: ApplePayJS.ApplePayPayment) => {
           // response.complete = this.onPaymentComplete;
-          resolve(response);
+          resolve(<any>response);
         };
         this.paymentRejector = (error: Error) => {
           reject(error);
@@ -309,11 +311,12 @@ if ((<any>window).ApplePaySession) {
       if (this['onvalidatemerchant']) {
         this['onvalidatemerchant'](e);
       } else {
+        let headers = new Headers({
+          'Content-Type': 'application/json'
+        });
         fetch(this.validationEndpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: headers,
           body: JSON.stringify({validationURL: e.validationURL})
         }).then(res => {
           if (res.status === 200) {
