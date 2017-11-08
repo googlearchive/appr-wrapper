@@ -71,7 +71,7 @@ function onBuyClicked(event) {
     supportedMethods: ['basic-card'],
     data: {
       supportedNetworks: [
-        'visa', 'mastercard', 'amex', 'discover', 'maestro',
+        'visa', 'mastercard', 'amex', 'discover',
         'diners', 'jcb', 'unionpay'
       ]
     }
