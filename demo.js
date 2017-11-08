@@ -34,8 +34,15 @@ const cert = fs.readFileSync(APPLE_PAY_CERTIFICATE_PATH);
 
 const app = express();
 app.use(bodyParser.json());
+app.enable('trust proxy');
+app.use(function(req, res, next) {
+  if (!req.secure) {
+    return res.redirect(`https://${req.headers.host}${req.url}`, 301);
+  }
+  next();
+});
 app.use(express.static(path.join(__dirname, 'demo'), {
-  setHeaders: function(res, path, stat) {
+  setHeaders: function(res) {
     res.set('Strict-Transport-Security', 'max-age=31536000');
   }
 }));

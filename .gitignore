@@ -3,3 +3,4 @@ apple-developer-merchantid-domain-association
 *.log
 *.pem
 *.lock
+.vscode
