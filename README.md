@@ -102,10 +102,12 @@ let details = {
   shippingOptions: [{
     id: 'standard',
     label: 'Standard shipping',
+    detail: 'Estimated delivery time: 2 days',
     amount: { currency: 'USD', value: '0.01' }
   }, {
     id: 'express',
     label: 'Express shipping',
+    detail: 'Estimated delivery time: 12 hours',
     amount: { currency: 'USD', value: '0.99' }
   }],
   total: {
@@ -211,6 +213,9 @@ The second argument to the `PaymentRequest` constructor.
 * The `total.amount.currency` is converted to
   [currencyCode](https://developer.apple.com/reference/applepayjs/paymentrequest/1916118-currencycode)
   in Apple Pay JS.
+* `shippingOption.detail` is converted to
+  [ApplePayShippingMethod.detail](https://developer.apple.com/documentation/applepayjs/applepayshippingmethod)
+  in Apple Pay JS.
 
 ```js
 let details = {
@@ -221,10 +226,12 @@ let details = {
   shippingOptions: [{
     id: 'standard',
     label: 'Standard shipping',
+    detail: 'Estimated delivery time: 2 days',
     amount: { currency: 'USD', value: '0.01' }
   }, {
     id: 'express',
     label: 'Express shipping',
+    detail: 'Estimated delivery time: 12 hours',
     amount: { currency: 'USD', value: '0.99' }
   }],
   total: {
