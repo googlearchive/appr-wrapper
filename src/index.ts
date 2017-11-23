@@ -155,7 +155,7 @@ if ((<any>window).ApplePaySession) {
         for (let option of details.shippingOptions) {
           let shippingMethod: ApplePayJS.ApplePayShippingMethod = {
             label: option.label,
-            detail: option.label,
+            detail: (<any>option).detail || '',
             amount: option.amount.value,
             identifier: option.id
           };
