@@ -219,8 +219,12 @@ if ((<any>window).ApplePaySession) {
      * @returns {any} response
      */
     private convertPaymentResponse(payment: ApplePayJS.ApplePayPayment): any {
-      let shippingAddress = this.convertPaymentAddress(payment.shippingContact);
-      let billingAddress = this.convertPaymentAddress(payment.billingContact);
+      let shippingAddress = payment.shippingContact
+        ? this.convertPaymentAddress(payment.shippingContact)
+        : undefined;
+      let billingAddress = payment.billingContact
+        ? this.convertPaymentAddress(payment.billingContact)
+        : undefined;
       let response = {
         details: {
           billingAddress:   billingAddress
