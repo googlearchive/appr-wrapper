@@ -94,6 +94,9 @@ if ((<any>window).ApplePaySession) {
       // details
       if (details) {
         this.updatePaymentDetails(details);
+        if (this.paymentRequest.shippingMethods && this.paymentRequest.shippingMethods.length) {
+          this.shippingOption = this.convertShippingMethod(this.paymentRequest.shippingMethods[0]);
+        }
       }
 
       // options
@@ -155,7 +158,7 @@ if ((<any>window).ApplePaySession) {
         for (let option of details.shippingOptions) {
           let shippingMethod: ApplePayJS.ApplePayShippingMethod = {
             label: option.label,
-            detail: option.label,
+            detail: (<any>option).detail || '',
             amount: option.amount.value,
             identifier: option.id
           };
@@ -219,8 +222,12 @@ if ((<any>window).ApplePaySession) {
      * @returns {any} response
      */
     private convertPaymentResponse(payment: ApplePayJS.ApplePayPayment): any {
-      let shippingAddress = this.convertPaymentAddress(payment.shippingContact);
-      let billingAddress = this.convertPaymentAddress(payment.billingContact);
+      let shippingAddress = payment.shippingContact
+        ? this.convertPaymentAddress(payment.shippingContact)
+        : undefined;
+      let billingAddress = payment.billingContact
+        ? this.convertPaymentAddress(payment.billingContact)
+        : undefined;
       let response = {
         details: {
           billingAddress:   billingAddress
@@ -230,7 +237,7 @@ if ((<any>window).ApplePaySession) {
         payerName:        `${payment.billingContact.givenName} ${payment.billingContact.familyName}`,
         payerPhone:       payment.shippingContact.phoneNumber,
         shippingAddress:  shippingAddress,
-        shippingOption:   '',
+        shippingOption:   this.shippingOption,
         applePayRaw:      payment,
         complete:         this.onPaymentComplete.bind(this)
       };
@@ -367,7 +374,7 @@ if ((<any>window).ApplePaySession) {
 
       this['onshippingaddresschange']({
         updateWith: p => {
-          p.then((details: PaymentDetails) => {
+          Promise.resolve(p).then((details: PaymentDetails) => {
             // https://developer.apple.com/reference/applepayjs/applepaysession/1778008-completeshippingcontactselection
             this.updatePaymentDetails(details);
             this.session.completeShippingContactSelection(
@@ -405,7 +412,7 @@ if ((<any>window).ApplePaySession) {
 
       this['onshippingoptionchange']({
         updateWith: p => {
-          p.then((details: PaymentDetails) => {
+          Promise.resolve(p).then((details: PaymentDetails) => {
             // https://developer.apple.com/reference/applepayjs/applepaysession/1778024-completeshippingmethodselection
             this.updatePaymentDetails(details);
             this.session.completeShippingMethodSelection(
