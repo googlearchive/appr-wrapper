@@ -1,0 +1,107 @@
+<!--
+    Copyright 2017 Google
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html>
+  <head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>appr-wrapper: Payment Request API wrapper for Apple Pay JS</title>
+    <script src="/js/payment-request.js"></script>
+    <style>
+#header {
+	max-width: 600px;
+	margin-left: auto;
+	margin-right: auto;
+	text-align: center;
+}
+
+.apple-pay-button {
+	-webkit-appearance: -apple-pay-button;
+	-apple-pay-button-type: buy;
+	display: inline-block;
+	width: 200px;
+	min-height: 30px;
+	border: 1px solid black;
+	background-image: -webkit-named-image(apple-pay-logo-black);
+	background-size: 100% calc(60% + 2px);
+	background-repeat: no-repeat;
+	background-color: white;
+	background-position: 50% 50%;
+	border-radius: 5px;
+	padding: 0px;
+	margin: 5px auto;
+	transition: background-color .15s;
+}
+
+.apple-pay-set-up-button {
+	-apple-pay-button-type: set-up;
+}
+
+.apple-pay-button:active {
+	background-color: rgb(152, 152, 152);
+}
+
+.payment-request-button {
+	display: inline-block;
+	width: 200px;
+	min-height: 30px;
+	border: 1px solid #777;
+	background-size: 100% calc(60% + 2px);
+	background-repeat: no-repeat;
+	background-color: white;
+	background-position: 50% 50%;
+	border-radius: 5px;
+	padding: 0px;
+	margin: 5px auto;
+	transition: background-color .15s;
+}
+
+.payment-request-button:after {
+	content: 'Payment Request';
+	color: #777;
+	font-size: 0.8em;
+}
+
+#body {
+	margin: 16px auto;
+	width: 800px;
+	max-width: 100%;
+	overflow: auto;
+	background-color: #eee;
+	padding: 0 10px;
+	height: 500px;
+}
+
+#body pre {
+	margin: 0;
+}
+    </style>
+  </head>
+  <body>
+
+		<div id="header">
+			<h2>Payment Request API demo for Apple Pay</h2>
+			<p>
+				This is a demo of the Payment Request API on Safari.
+			</p>
+			<p><strong>This demo won't charge you any money nor send your payment information anywhere.</strong></p>
+			<div id="payment"></div>
+		</div>
+		<div id="body"><pre><code id="code">
+		</code></pre></div>
+  </body>
+</html>
