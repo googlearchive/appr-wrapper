@@ -16,6 +16,7 @@
 
 export let PaymentRequest;
 
+// TODO: Also check that PaymentRequest is not supported
 if ((<any>window).ApplePaySession) {
   const APPLE_PAY_JS_IDENTIFIER = 'https://apple.com/apple-pay';
   PaymentRequest = class {
@@ -30,8 +31,6 @@ if ((<any>window).ApplePaySession) {
     public onshippingaddresschange = null;
     public onshippingoptionchange = null;
     public onpaymentmethodselected = null;
-
-    private validationEndpoint: string = '';
     private merchantIdentifier: string = '';
 
     /**
@@ -44,12 +43,13 @@ if ((<any>window).ApplePaySession) {
       details: PaymentDetailsInit,
       options: PaymentOptions
     ) {
+      let version;
       let methodSpecified = false;
       this.paymentRequest = {
         countryCode: '',
         currencyCode: '',
         lineItems: [],
-        merchantCapabilities: ['supports3DS'],
+        merchantCapabilities: null,
         supportedNetworks: [],
         total: null,
         billingContact: null,
@@ -63,9 +63,13 @@ if ((<any>window).ApplePaySession) {
       // methodData
       for (let method of methodData) {
         // If `supportedMethods` includes `https://apple.com/apple-pay`...
-        if (method.supportedMethods.indexOf(APPLE_PAY_JS_IDENTIFIER) > -1) {
+        if (method.supportedMethods === APPLE_PAY_JS_IDENTIFIER ||
+            method.supportedMethods.indexOf(APPLE_PAY_JS_IDENTIFIER) > -1) {
           this.paymentRequest.supportedNetworks = method.data.supportedNetworks;
           this.paymentRequest.countryCode = method.data.countryCode;
+          if (method.data.version !== 3) {
+            throw 'Apple Pay needs to be version 3.';
+          }
           if (method.data.billingContact) {
             this.paymentRequest.billingContact = method.data.billingContact;
           } else {
@@ -80,7 +84,6 @@ if ((<any>window).ApplePaySession) {
             this.paymentRequest.merchantCapabilities = method.data.merchantCapabilities;
           }
 
-          this.validationEndpoint = method.data.validationEndpoint;
           this.merchantIdentifier = method.data.merchantIdentifier;
           methodSpecified = true;
           break;
@@ -121,7 +124,7 @@ if ((<any>window).ApplePaySession) {
       this.session = new ApplePaySession(1, this.paymentRequest);
 
       this.session.addEventListener('validatemerchant',
-        this.onValidateMerchant.bind(this));
+        this.onMerchantValidation.bind(this));
       this.session.addEventListener('paymentauthorized',
         this.onPaymentAuthorized.bind(this));
       this.session.addEventListener('paymentmethodselected',
@@ -273,16 +276,6 @@ if ((<any>window).ApplePaySession) {
       }
     }
 
-    public completeMerchantValidation(merchantSession: any): void {
-      // https://developer.apple.com/reference/applepayjs/applepaysession/1778015-completemerchantvalidation
-      this.session.completeMerchantValidation(merchantSession);
-    }
-
-    public completePaymentMethodSelection(newTotal: ApplePayJS.ApplePayLineItem, newLineItems: ApplePayJS.ApplePayLineItem[]): void {
-      // https://developer.apple.com/reference/applepayjs/applepaysession/1777995-completepaymentmethodselection
-      this.session.completePaymentMethodSelection(newTotal, newLineItems);
-    }
-
     /**
      * @param  {string} type
      * @param  {(e:Event)=>any} callback
@@ -292,7 +285,7 @@ if ((<any>window).ApplePaySession) {
       if (type === 'shippingaddresschange' ||
           type === 'shippingoptionchange' ||
           type === 'paymentmethodselected' ||
-          type === 'validatemerchant') {
+          type === 'merchantvalidation') {
         this[`on${type}`] = callback;
       } else {
         throw `Unknown event type "${type}" for \`addEventListener\`.`;
@@ -303,32 +296,14 @@ if ((<any>window).ApplePaySession) {
      * @param  {ApplePayJS.ApplePayValidMerchantEvent} e
      * @returns void
      */
-    private onValidateMerchant(
+    private onMerchantValidation(
       e: ApplePayJS.ApplePayValidateMerchantEvent
     ): void {
-      e.stopPropagation();
-      // https://developer.apple.com/reference/applepayjs/applepaysession/1778021-onvalidatemerchant
-      if (this['onvalidatemerchant']) {
-        this['onvalidatemerchant'](e);
-      } else {
-        let headers = new Headers({
-          'Content-Type': 'application/json'
-        });
-        fetch(this.validationEndpoint, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify({validationURL: e.validationURL})
-        }).then(res => {
-          if (res.status === 200) {
-            return res.json();
-          } else {
-            throw 'Merchant validation error.';
-          }
-        }).then((merchantSession: any) => {
-          this.completeMerchantValidation(merchantSession);
-        }).catch(error => {
-          throw error;
-        });
+      // https://developer.apple.com/reference/applepayjs/applepaysession/1778021onMerchantValidation-
+      if (this['onMerchantValidation']) {
+        e.stopPropagation();
+        e.complete = this.session.completeMerchantValidation;
+        this['onMerchantValidation'](e);
       }
     }
 
