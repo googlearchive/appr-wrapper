@@ -37,7 +37,7 @@ app.use(bodyParser.json());
 app.enable('trust proxy');
 app.use(function(req, res, next) {
   if (!req.secure) {
-    return res.redirect(`https://${req.headers.host}${req.url}`, 301);
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
   }
   next();
 });

@@ -68,7 +68,7 @@ function onBuyClicked(event) {
   event.preventDefault();
 
   let supportedInstruments = [{
-    supportedMethods: ['basic-card'],
+    supportedMethods: 'basic-card',
     data: {
       supportedNetworks: [
         'visa', 'mastercard', 'amex', 'discover',
@@ -76,7 +76,7 @@ function onBuyClicked(event) {
       ]
     }
   }, {
-    supportedMethods: ['https://apple.com/apple-pay'],
+    supportedMethods: 'https://apple.com/apple-pay',
     data: {
       supportedNetworks: [
         'amex', 'discover', 'masterCard', 'visa'
@@ -173,16 +173,6 @@ function onBuyClicked(event) {
 
   let response;
 
-  // request.canMakePayment().then(result => {
-  //   if (result) {
-  //     return request.show();
-  //   } else if (window.ApplePaySession && ApplePaySession.openPaymentSetup) {
-  //     event.target.classList.add('apple-pay-set-up-button');
-  //     throw '';
-  //   } else {
-  //     throw 'No payment method available.';
-  //   }
-  // }).then(result => {
   request.show().then(result => {
     response = result;
     if (response.methodName === 'https://apple.com/apple-pay') {
