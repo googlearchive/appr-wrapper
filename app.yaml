@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-runtime: nodejs
-env: flex
-automatic_scaling:
-  min_num_instances: 1
-  max_num_instances: 2
+runtime: nodejs8
+
+handlers:
+- url: /.*
+  script: server.js
