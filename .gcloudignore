@@ -11,7 +11,7 @@
 # from your .gitignore file, remove the corresponding line
 # below:
 .git
-.gitignore
+.vscode
 
 # Node.js dependencies:
 node_modules/

@@ -15,4 +15,5 @@ runtime: nodejs8
 
 handlers:
 - url: /.*
-  script: server.js
+  script: auto
+  secure: always

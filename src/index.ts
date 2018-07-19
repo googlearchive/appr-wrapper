@@ -36,12 +36,12 @@ if ((<any>window).ApplePaySession) {
 
     /**
      * @param  {PaymentMethodData[]} methodData
-     * @param  {PaymentDetails} details
+     * @param  {PaymentDetailsInit} details
      * @param  {PaymentOptions} options
      */
     constructor(
       methodData: PaymentMethodData[],
-      details: PaymentDetails,
+      details: PaymentDetailsInit,
       options: PaymentOptions
     ) {
       let methodSpecified = false;
@@ -135,9 +135,9 @@ if ((<any>window).ApplePaySession) {
     }
 
     /**
-     * @param  {PaymentDetails} details
+     * @param  {PaymentDetailsUpdate} details
      */
-    private updatePaymentDetails(details: PaymentDetails) {
+    private updatePaymentDetails(details: PaymentDetailsUpdate) {
       if (details.displayItems) {
         this.paymentRequest.lineItems = <ApplePayJS.ApplePayLineItem[]>[];
         for (let item of details.displayItems) {
@@ -171,7 +171,7 @@ if ((<any>window).ApplePaySession) {
           amount: details.total.amount.value
         };
       } else {
-        throw '`total` is required parameter for `PaymentDetails`.';
+        throw '`total` is required parameter for `PaymentDetailsUpdate`.';
       }
     }
 
@@ -367,7 +367,7 @@ if ((<any>window).ApplePaySession) {
 
       this['onshippingaddresschange']({
         updateWith: p => {
-          p.then((details: PaymentDetails) => {
+          p.then((details: PaymentDetailsUpdate) => {
             // https://developer.apple.com/reference/applepayjs/applepaysession/1778008-completeshippingcontactselection
             this.updatePaymentDetails(details);
             this.session.completeShippingContactSelection(
@@ -375,7 +375,7 @@ if ((<any>window).ApplePaySession) {
               this.paymentRequest.shippingMethods,
               this.paymentRequest.total,
               this.paymentRequest.lineItems);
-          }, (details: PaymentDetails) => {
+          }, (details: PaymentDetailsUpdate) => {
             // TODO: In which case does this happen?
             this.updatePaymentDetails(details);
             this.session.completeShippingContactSelection(
@@ -405,14 +405,14 @@ if ((<any>window).ApplePaySession) {
 
       this['onshippingoptionchange']({
         updateWith: p => {
-          p.then((details: PaymentDetails) => {
+          p.then((details: PaymentDetailsUpdate) => {
             // https://developer.apple.com/reference/applepayjs/applepaysession/1778024-completeshippingmethodselection
             this.updatePaymentDetails(details);
             this.session.completeShippingMethodSelection(
               ApplePaySession.STATUS_SUCCESS,
               this.paymentRequest.total,
               this.paymentRequest.lineItems);
-          }, (details: PaymentDetails) => {
+          }, (details: PaymentDetailsUpdate) => {
             // TODO: In which case does this happen?
             this.updatePaymentDetails(details);
             this.session.completeShippingMethodSelection(

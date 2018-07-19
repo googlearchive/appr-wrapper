@@ -85,6 +85,8 @@ function onBuyClicked(event) {
       validationEndpoint: '/applepay/validate/',
       merchantIdentifier: merchantId
     }
+  }, {
+    supportedMethods: 'https://bobpay.xyz/pay'
   }];
 
   let details = {
@@ -171,12 +173,20 @@ function onBuyClicked(event) {
     }
   }).then(result => {
     response = result;
-    if (response.methodName === 'https://apple.com/apple-pay') {
-      console.log('this is apple pay js');
-      console.log(response.applePayRaw);
-    } else {
-      console.log('this is pure PaymentRequest');
-      console.log(response);
+    switch (response.methodName) {
+      case 'https://apple.com/apple-pay':
+        console.log('This is Apple Pay JS');
+        console.log(response);
+        break;
+      case 'https://bobpay.xyz/pay':
+        console.log('This is Bobpay');
+        console.log(response);
+        break;
+      case 'basic-card':
+      default:
+        console.log('This is basic-card');
+        console.log(response);
+        break;
     }
     // Emulate an interaction with a server
     setTimeout(() => {
@@ -202,11 +212,9 @@ window.addEventListener('DOMContentLoaded', function() {
     button.classList.add('payment-request-button');
   }
   button.addEventListener('click', onBuyClicked);
-  fetch('/js/script.js')
-  .then(code => {
+  fetch('/js/script.js').then(code => {
     return code.text();
-  })
-  .then(text => {
+  }).then(text => {
     document.querySelector('#code').innerText = text;
   });
 });

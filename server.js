@@ -47,8 +47,8 @@ app.use(express.static(path.join(__dirname, 'demo'), {
   }
 }));
 
-app.get('/.well-known/apple-developer-merchantid-domain-association', (req, res) => {
-  let file = fs.readFileSync('./demo/well-known/apple-developer-merchantid-domain-association');
+app.get('/.well-known/apple-developer-merchantid-domain-association.txt', (req, res) => {
+  let file = fs.readFileSync('./demo/well-known/apple-developer-merchantid-domain-association.txt');
   res.send(file);
 });
 

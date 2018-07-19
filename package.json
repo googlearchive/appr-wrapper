@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "gulp",
-    "serve": "node server.js",
+    "deploy": "npm run build && gcloud app deploy --project=web-payment-apis app.yaml",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Eiji Kitamura <agektmr@google.com>",
