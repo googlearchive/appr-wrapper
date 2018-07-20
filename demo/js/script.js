@@ -68,7 +68,7 @@ function onBuyClicked(event) {
   event.preventDefault();
 
   let supportedInstruments = [{
-    supportedMethods: ['basic-card'],
+    supportedMethods: 'basic-card',
     data: {
       supportedNetworks: [
         'visa', 'mastercard', 'amex', 'discover',
@@ -76,14 +76,15 @@ function onBuyClicked(event) {
       ]
     }
   }, {
-    supportedMethods: ['https://apple.com/apple-pay'],
+    supportedMethods: 'https://apple.com/apple-pay',
     data: {
       supportedNetworks: [
         'amex', 'discover', 'masterCard', 'visa'
       ],
+      version: 3,
       countryCode: 'US',
-      validationEndpoint: '/applepay/validate/',
-      merchantIdentifier: merchantId
+      merchantIdentifier: merchantId,
+      merchantCapabilities: ['supports3DS']
     }
   }, {
     supportedMethods: 'https://bobpay.xyz/pay'
@@ -151,6 +152,23 @@ function onBuyClicked(event) {
       // There should be only one option. Do nothing.
       resolve(result);
     }));
+  });
+
+  // When merchant validation is required
+  request.addEventListener('merchantvalidation', e => {
+    const headers = new Headers({
+      'Content-Type': 'application/json'
+    });
+    const promise = fetch('/applepay/validate/', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({validationURL: e.validationURL})
+    }).then(res => {
+      if (res.status === 200) {
+        return res.json();
+      }
+    });
+    e.complete(promise);
   });
 
   let response;

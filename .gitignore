@@ -1,5 +1,4 @@
 node_modules
-apple-developer-merchantid-domain-association.txt
 *.log
 *.pem
 *.lock

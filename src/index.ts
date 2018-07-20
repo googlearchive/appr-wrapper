@@ -62,9 +62,10 @@ if ((<any>window).ApplePaySession) {
 
       // methodData
       for (let method of methodData) {
-        // If `supportedMethods` includes `https://apple.com/apple-pay`...
-        if (method.supportedMethods === APPLE_PAY_JS_IDENTIFIER ||
-            method.supportedMethods.indexOf(APPLE_PAY_JS_IDENTIFIER) > -1) {
+        // If `supportedMethods` includes `https://apple.com/apple-pay`
+        // or matches exactly with `https://apple.com/apple-pay`...
+        if (method.supportedMethods.indexOf(APPLE_PAY_JS_IDENTIFIER) > -1 ||
+            method.supportedMethods === APPLE_PAY_JS_IDENTIFIER) {
           this.paymentRequest.supportedNetworks = method.data.supportedNetworks;
           this.paymentRequest.countryCode = method.data.countryCode;
           if (method.data.version !== 3) {
@@ -276,6 +277,11 @@ if ((<any>window).ApplePaySession) {
       }
     }
 
+    public completePaymentMethodSelection(newTotal: ApplePayJS.ApplePayLineItem, newLineItems: ApplePayJS.ApplePayLineItem[]): void {
+      // https://developer.apple.com/reference/applepayjs/applepaysession/1777995-completepaymentmethodselection
+      this.session.completePaymentMethodSelection(newTotal, newLineItems);
+    }
+
     /**
      * @param  {string} type
      * @param  {(e:Event)=>any} callback
@@ -284,7 +290,7 @@ if ((<any>window).ApplePaySession) {
     public addEventListener(type: string, callback: (e: Event) => any): void {
       if (type === 'shippingaddresschange' ||
           type === 'shippingoptionchange' ||
-          type === 'paymentmethodselected' ||
+          // type === 'paymentmethodselected' ||
           type === 'merchantvalidation') {
         this[`on${type}`] = callback;
       } else {
@@ -299,12 +305,18 @@ if ((<any>window).ApplePaySession) {
     private onMerchantValidation(
       e: ApplePayJS.ApplePayValidateMerchantEvent
     ): void {
-      // https://developer.apple.com/reference/applepayjs/applepaysession/1778021onMerchantValidation-
-      if (this['onMerchantValidation']) {
-        e.stopPropagation();
-        e.complete = this.session.completeMerchantValidation;
-        this['onMerchantValidation'](e);
-      }
+      // https://developer.apple.com/reference/applepayjs/applepaysession/1778021-onvalidatemerchant
+      if (!this['onmerchantvalidation']) return;
+      e.stopPropagation();
+
+      this['onmerchantvalidation']({
+        validationURL: e.validationURL,
+        complete: p => {
+          p.then((merchantSession: any) => {
+            this.session.completeMerchantValidation(merchantSession);
+          });
+        }
+      })
     }
 
     /**
