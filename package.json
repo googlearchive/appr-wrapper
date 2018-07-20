@@ -1,6 +1,6 @@
 {
   "name": "appr-wrapper",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Payment Request wrapper for Apple Pay JS",
   "main": "server.js",
   "scripts": {
