@@ -48,7 +48,14 @@ app.use(express.static(path.join(__dirname, 'demo'), {
 }));
 
 app.get('/.well-known/apple-developer-merchantid-domain-association.txt', (req, res) => {
-  let file = fs.readFileSync('./demo/well-known/apple-developer-merchantid-domain-association.txt');
+  let file;
+  if (req.hostname === 'web-payment-apis.appspot.com') {
+    // https://web-payment-apis.appspot.com/.well-known/apple-developer-merchantid-domain-association.txt
+    file = fs.readFileSync('./demo/well-known/production.txt');
+  } else {
+    // https://dev-dot-web-payment-apis.appspot.com/.well-known/apple-developer-merchantid-domain-association.txt
+    file = fs.readFileSync('./demo/well-known/development.txt');
+  }
   res.send(file);
 });
 
@@ -70,11 +77,13 @@ app.post('/applepay/validate/', function (req, res) {
   };
 
   request(options, function(err, response, body) {
-    if (err) {
-      console.log(err, response, body);
-      res.status(500).send(body);
+    if (response.statusCode !== 200) {
+      console.error(err, response, body);
+      res.status(response.statusCode).send(body);
+      return;
+    } else {
+      res.send(body);
     }
-    res.send(body);
   });
 });
 
