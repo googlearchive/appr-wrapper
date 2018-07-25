@@ -14,83 +14,86 @@
 
 const merchantId = 'merchant.com.agektmr.payment';
 
-let priceCalc = function(details) {
-  this.details = details;
-};
-
-priceCalc.prototype.selectShippingOption = function(id) {
-  let newShippingOption = null;
-  let oldShippingOption = null;
-
-  // Pick new shipping option and clear selection
-  for (let index in this.details.shippingOptions) {
-    let option = this.details.shippingOptions[index];
-    if (option.id === id) {
-      if (!option.selected) {
-        this.details.shippingOptions[index].selected = true;
-        newShippingOption = option;
-      }
-    } else {
-      if (option.selected) {
-        oldShippingOption = option;
-      }
-      this.details.shippingOptions[index].selected = false;
-    }
+class priceCalc {
+  constructor(details) {
+    this.details = details;
   }
 
-  // If `newShippingOption` is not assigned, no changes.
-  if (!newShippingOption) {
+  selectShippingOption(id) {
+    let newShippingOption = null;
+    let oldShippingOption = null;
+
+    // Pick new shipping option and clear selection
+    for (let index in this.details.shippingOptions) {
+      let option = this.details.shippingOptions[index];
+      if (option.id === id) {
+        if (!option.selected) {
+          this.details.shippingOptions[index].selected = true;
+          newShippingOption = option;
+        }
+      } else {
+        if (option.selected) {
+          oldShippingOption = option;
+        }
+        this.details.shippingOptions[index].selected = false;
+      }
+    }
+
+    // If `newShippingOption` is not assigned, no changes.
+    if (!newShippingOption) {
+      return this.details;
+    }
+
+    let price = 0;
+    for (let index = 0; index < this.details.displayItems.length; index++) {
+      let item = this.details.displayItems[index];
+      if (oldShippingOption && item.label === oldShippingOption.label) {
+        this.details.displayItems.splice(index--, 1);
+      } else {
+        price += parseFloat(item.amount.value);
+      }
+    }
+    this.details.displayItems.push(newShippingOption);
+    price += parseFloat(newShippingOption.amount.value);
+
+    this.details.total.amount.value = price.toString();
     return this.details;
   }
+}
 
-  let price = 0;
-  for (let index = 0; index < this.details.displayItems.length; index++) {
-    let item = this.details.displayItems[index];
-    if (oldShippingOption && item.label === oldShippingOption.label) {
-      this.details.displayItems.splice(index--, 1);
-    } else {
-      price += parseFloat(item.amount.value);
-    }
+const methods = [{
+  supportedMethods: 'basic-card',
+  data: {
+    supportedNetworks: [
+      'visa', 'mastercard', 'amex', 'discover',
+      'diners', 'jcb', 'unionpay'
+    ]
   }
-  this.details.displayItems.push(newShippingOption);
-  price += parseFloat(newShippingOption.amount.value);
-
-  this.details.total.amount.value = price.toString();
-  return this.details;
-};
+}, {
+  supportedMethods: 'https://apple.com/apple-pay',
+  data: {
+    supportedNetworks: [
+      'amex', 'discover', 'masterCard', 'visa'
+    ],
+    version: 3,
+    countryCode: 'US',
+    merchantIdentifier: merchantId,
+    merchantCapabilities: ['supports3DS']
+  }
+}, {
+  supportedMethods: 'https://bobpay.xyz/pay'
+}];
 
 function onBuyClicked(event) {
   if (!PaymentRequest) {
+    alert('PaymentRequest is not available!');
     return;
   }
   // Payment Request API is available.
   // Stop the default anchor redirect.
   event.preventDefault();
 
-  let supportedInstruments = [{
-    supportedMethods: 'basic-card',
-    data: {
-      supportedNetworks: [
-        'visa', 'mastercard', 'amex', 'discover',
-        'diners', 'jcb', 'unionpay'
-      ]
-    }
-  }, {
-    supportedMethods: 'https://apple.com/apple-pay',
-    data: {
-      supportedNetworks: [
-        'amex', 'discover', 'masterCard', 'visa'
-      ],
-      version: 3,
-      countryCode: 'US',
-      merchantIdentifier: merchantId,
-      merchantCapabilities: ['supports3DS']
-    }
-  }, {
-    supportedMethods: 'https://bobpay.xyz/pay'
-  }];
-
-  let details = {
+  const details = {
     displayItems: [{
       label: 'Original donation amount',
       amount: { currency: 'USD', value: '0.01' }
@@ -110,7 +113,7 @@ function onBuyClicked(event) {
     }
   };
 
-  let options = {
+  const options = {
     requestShipping: true,
     requestPayerEmail: true,
     requestPayerPhone: true,
@@ -119,14 +122,14 @@ function onBuyClicked(event) {
   };
 
   // Initialization
-  let request = new PaymentRequest(supportedInstruments, details, options);
+  const request = new PaymentRequest(methods, details, options);
 
   // When user selects a shipping address
   request.addEventListener('shippingaddresschange', e => {
     e.updateWith(new Promise(resolve => {
       let result;
-      let addr = request.shippingAddress;
-      let price = new priceCalc(details);
+      const addr = request.shippingAddress;
+      const price = new priceCalc(details);
       // Shipping to US is supported
       if (addr.country.toUpperCase() === 'US') {
         result = price.selectShippingOption('standard');
@@ -147,8 +150,8 @@ function onBuyClicked(event) {
   // When user selects a shipping option
   request.addEventListener('shippingoptionchange', e => {
     e.updateWith(new Promise(resolve => {
-      let calc = new priceCalc(details);
-      let result = calc.selectShippingOption(request.shippingOption);
+      const calc = new priceCalc(details);
+      const result = calc.selectShippingOption(request.shippingOption);
       // There should be only one option. Do nothing.
       resolve(result);
     }));
@@ -180,20 +183,11 @@ function onBuyClicked(event) {
     return;
   }
 
-  request.canMakePayment().then(result => {
-    if (result) {
-      return request.show();
-    } else if (window.ApplePaySession && ApplePaySession.openPaymentSetup) {
-      event.target.classList.add('apple-pay-set-up-button');
-      throw '';
-    } else {
-      throw 'No payment method available.';
-    }
-  }).then(result => {
+  request.show().then(result => {
     response = result;
     switch (response.methodName) {
       case 'https://apple.com/apple-pay':
-        console.log('This is Apple Pay JS');
+        console.log('This is Apple Pay');
         console.log(response);
         break;
       case 'https://bobpay.xyz/pay':
@@ -223,13 +217,25 @@ function onBuyClicked(event) {
 
 // Assuming an anchor is the target for the event listener.
 window.addEventListener('DOMContentLoaded', function() {
-  let button = document.querySelector('#payment');
-  if (window.ApplePaySession) {
-    button.classList.add('apple-pay-button');
-  } else if (window.PaymentRequest) {
-    button.classList.add('payment-request-button');
+  const button = document.querySelector('#payment');
+  if (window.PaymentRequest) {
+    const details = {
+      total: {label:'Total',amount:{currency:'USD',value:'10'}}
+    };
+    const request = new PaymentRequest(methods, details);
+    request.canMakePayment().then(result => {
+      if (result) {
+        if (window.ApplePaySession) {
+          button.classList.add('apple-pay-button');
+        } else {
+          button.classList.add('payment-request-button');
+        }
+        button.addEventListener('click', onBuyClicked);
+      } else if (window.ApplePaySession) {
+        button.classList.add('apple-pay-set-up-button');
+      }
+    });
   }
-  button.addEventListener('click', onBuyClicked);
   fetch('/js/script.js').then(code => {
     return code.text();
   }).then(text => {
