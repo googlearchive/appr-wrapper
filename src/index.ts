@@ -17,10 +17,12 @@
 export let PaymentRequest;
 
 // TODO: Also check that PaymentRequest is not supported
-if ((<any>window).ApplePaySession) {
+if ((<any>window).ApplePaySession && !ApplePaySession.supportsVersion(3)) {
   const APPLE_PAY_JS_IDENTIFIER = 'https://apple.com/apple-pay';
   PaymentRequest = class {
     private paymentRequest: ApplePayJS.ApplePayPaymentRequest;
+    private preservedDetails: PaymentDetailsUpdate;
+    private preservedDisplayItems: PaymentItem[];
     public paymentRequestID: string = '';
     public shippingAddress: PaymentAddress = null;
     public shippingOption: string = '';
@@ -43,7 +45,6 @@ if ((<any>window).ApplePaySession) {
       details: PaymentDetailsInit,
       options: PaymentOptions
     ) {
-      let version;
       let methodSpecified = false;
       this.paymentRequest = {
         countryCode: '',
@@ -140,8 +141,60 @@ if ((<any>window).ApplePaySession) {
 
     /**
      * @param  {PaymentDetailsUpdate} details
+     * @param  {string} selectedMethod?
+     * @returns void
      */
-    private updatePaymentDetails(details: PaymentDetailsUpdate) {
+    private updatePaymentDetails(
+      details: PaymentDetailsUpdate,
+      selectedMethod?: string,
+      selectedType?: string
+    ): void {
+      if (selectedMethod) {
+        // Get rid of existing preserved display items
+        const newDisplayItems = [];
+        for (let item of details.displayItems) {
+          let included = false;
+          for (let _item of this.preservedDisplayItems) {
+            if (_item.label === item.label) included = true;
+          }
+          if (!included) newDisplayItems.push(item);
+        }
+        details.displayItems = newDisplayItems;
+        this.preservedDisplayItems = [];
+
+        // Apply modifiers
+        for (let modifier of details.modifiers) {
+          if (modifier.supportedMethods !== selectedMethod)
+            continue;
+
+          // if supported method is 'basic-card' and
+          // supported type is specified, check if it matches
+          // Otherwise ignore.
+          // (This is technically useless on Safari)
+          if (selectedMethod == 'basic-card' &&
+              modifier.data &&
+              modifier.data.supportedTypes) {
+            if (!selectedType ||
+                modifier.data.supportedTypes.indexOf(selectedType) === -1)
+              continue;
+          }
+
+          if (modifier.additionalDisplayItems) {
+            // Concatenate existing display items and additional ones
+            details.displayItems =
+              [...details.displayItems, ...modifier.additionalDisplayItems];
+
+            // Preserve additiona display items for future removal
+            this.preservedDisplayItems = modifier.additionalDisplayItems;
+          }
+
+          if (modifier.total) {
+            details.total = modifier.total;
+          }
+          break;
+        }
+      }
+
       if (details.displayItems) {
         this.paymentRequest.lineItems = <ApplePayJS.ApplePayLineItem[]>[];
         for (let item of details.displayItems) {
@@ -177,6 +230,9 @@ if ((<any>window).ApplePaySession) {
       } else {
         throw '`total` is required parameter for `PaymentDetailsUpdate`.';
       }
+
+      // Preserve what we have
+      this.preservedDetails = details;
     }
 
     /**
@@ -187,9 +243,12 @@ if ((<any>window).ApplePaySession) {
     }
 
     /**
-     * @param  {ApplePayJS.ApplePayPaymentContact} shippingContact
+     * @param  {ApplePayJS.ApplePayPaymentContact} contact
+     * @returns PaymentAddress
      */
-    private convertPaymentAddress(contact: ApplePayJS.ApplePayPaymentContact): PaymentAddress {
+    private convertPaymentAddress(
+      contact: ApplePayJS.ApplePayPaymentContact
+    ): PaymentAddress {
       let address = {
         country:            contact.countryCode || '',
         addressLine:        contact.addressLines || [],
@@ -277,11 +336,6 @@ if ((<any>window).ApplePaySession) {
       }
     }
 
-    public completePaymentMethodSelection(newTotal: ApplePayJS.ApplePayLineItem, newLineItems: ApplePayJS.ApplePayLineItem[]): void {
-      // https://developer.apple.com/reference/applepayjs/applepaysession/1777995-completepaymentmethodselection
-      this.session.completePaymentMethodSelection(newTotal, newLineItems);
-    }
-
     /**
      * @param  {string} type
      * @param  {(e:Event)=>any} callback
@@ -328,13 +382,14 @@ if ((<any>window).ApplePaySession) {
     ): void {
       e.stopPropagation();
       // https://developer.apple.com/reference/applepayjs/applepaysession/1778013-onpaymentmethodselected
-      if (this['onpaymentmethodselected']) {
-        this['onpaymentmethodselected'](e);
-      } else {
-        let newTotal = this.paymentRequest.total;
-        let newLineItems = this.paymentRequest.lineItems;
-        this.session.completePaymentMethodSelection(newTotal, newLineItems);
-      }
+      this.updatePaymentDetails(
+        this.preservedDetails,
+        'https://apple.com/apple-pay'
+      );
+
+      let newTotal = this.paymentRequest.total;
+      let newLineItems = this.paymentRequest.lineItems;
+      this.session.completePaymentMethodSelection(newTotal, newLineItems);
     }
 
     /**
