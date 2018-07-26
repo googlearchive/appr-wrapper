@@ -35,6 +35,9 @@ const cert = fs.readFileSync(APPLE_PAY_CERTIFICATE_PATH);
 const app = express();
 app.use(bodyParser.json());
 app.enable('trust proxy');
+app.use((req, res) => {
+  return res.redirect(301, `https://appr-wrapper.appspot.com${req.originalUrl}`);
+});
 app.use(function(req, res, next) {
   if (!req.secure) {
     return res.redirect(301, `https://${req.headers.host}${req.url}`);
