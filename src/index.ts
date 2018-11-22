@@ -483,7 +483,7 @@ if ((<any>window).ApplePaySession) {
         // https://developer.apple.com/reference/applepayjs/applepaysession/1778012-completepayment
         this.session.completePayment(status);
       } else {
-        throw 'Unkown status code for complete().';
+        throw 'Unknown status code for complete().';
       }
     }
   }
