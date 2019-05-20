@@ -17,13 +17,13 @@ const webpack2 = require('webpack');
 const webpackStream = require('webpack-stream');
 const webpackConfig = require('./webpack.config.js');
 
-gulp.task('default', ['build'], function() {
-  return gulp.src(['./dist/*.*'])
-    .pipe(gulp.dest('./demo/js'));
-});
-
-gulp.task('build', function() {
+gulp.task('build', () => {
   return gulp.src(['./src/*.ts'])
     .pipe(webpackStream(webpackConfig, webpack2))
     .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('default', gulp.series('build'), () => {
+  return gulp.src(['./dist/*.*'])
+    .pipe(gulp.dest('./demo/js'));
 });

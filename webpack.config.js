@@ -12,10 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-const webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   devtool: 'source-map',
+  mode: "development",
   entry: `${__dirname}/src/index.ts`,
   output: {
     libraryTarget: "umd",
@@ -28,7 +29,13 @@ module.exports = {
       loader: 'ts-loader'
     }]
   },
-  plugins: [
-    new webpack.optimize.UglifyJsPlugin()
-  ]
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true
+      })
+    ]
+  }
 };

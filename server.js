@@ -15,7 +15,6 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const bodyParser = require('body-parser');
 const request = require('request');
 
 // Replace these params based on your own configuration
@@ -33,7 +32,7 @@ try {
 const cert = fs.readFileSync(APPLE_PAY_CERTIFICATE_PATH);
 
 const app = express();
-app.use(bodyParser.json());
+app.use(express.json());
 app.enable('trust proxy');
 app.use(function(req, res, next) {
   if (!req.secure) {
@@ -62,6 +61,13 @@ app.get('/.well-known/apple-developer-merchantid-domain-association.txt', (req, 
 
 app.post('/applepay/validate/', function (req, res) {
   if (!req.body.validationURL) return res.sendStatus(400);
+  // **Important!** Don't forget to validate that
+  // this origin points to "apple.com"
+  if (!/apple\.com$/.test((new URL(req.body.validationURL)).hostname)) {
+    console.error(`The hostname ${req.body.validationURL} does not \
+include "apple.com".`);
+    return res.sendStatus(400);
+  }
 
   const options = {
     url: req.body.validationURL,
