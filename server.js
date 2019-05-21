@@ -63,7 +63,7 @@ app.post('/applepay/validate/', function (req, res) {
   if (!req.body.validationURL) return res.sendStatus(400);
   // **Important!** Don't forget to validate that
   // this origin points to "apple.com"
-  if (!/apple\.com$/.test((new URL(req.body.validationURL)).hostname)) {
+  if (!/\.apple\.com$/.test((new URL(req.body.validationURL)).hostname)) {
     console.error(`The hostname ${req.body.validationURL} does not \
 include "apple.com".`);
     return res.sendStatus(400);
