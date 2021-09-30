@@ -219,13 +219,6 @@ if (window.ApplePaySession && !ApplePaySession.supportsVersion(3)) {
                     var modifier = _e[_d];
                     if (modifier.supportedMethods !== selectedMethod)
                         continue;
-                    if (selectedMethod == 'basic-card' &&
-                        modifier.data &&
-                        modifier.data.supportedTypes) {
-                        if (!selectedType ||
-                            modifier.data.supportedTypes.indexOf(selectedType) === -1)
-                            continue;
-                    }
                     if (modifier.additionalDisplayItems) {
                         details.displayItems = details.displayItems.concat(modifier.additionalDisplayItems);
                         this.preservedDisplayItems = modifier.additionalDisplayItems;

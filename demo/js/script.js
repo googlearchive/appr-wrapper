@@ -62,14 +62,6 @@ class priceCalc {
 }
 
 const methods = [{
-  supportedMethods: 'basic-card',
-  data: {
-    supportedNetworks: [
-      'visa', 'mastercard', 'amex', 'discover',
-      'diners', 'jcb', 'unionpay'
-    ]
-  }
-}, {
   supportedMethods: 'https://apple.com/apple-pay',
   data: {
     supportedNetworks: [
@@ -194,9 +186,8 @@ function onBuyClicked(event) {
         console.log('This is Bobpay');
         console.log(response);
         break;
-      case 'basic-card':
       default:
-        console.log('This is basic-card');
+        console.log('This is ' + response.methodName);
         console.log(response);
         break;
     }

@@ -147,7 +147,6 @@ if ((<any>window).ApplePaySession && !ApplePaySession.supportsVersion(3)) {
     private updatePaymentDetails(
       details: PaymentDetailsUpdate,
       selectedMethod?: string,
-      selectedType?: string
     ): void {
       if (selectedMethod) {
         // Get rid of existing preserved display items
@@ -166,18 +165,6 @@ if ((<any>window).ApplePaySession && !ApplePaySession.supportsVersion(3)) {
         for (let modifier of details.modifiers) {
           if (modifier.supportedMethods !== selectedMethod)
             continue;
-
-          // if supported method is 'basic-card' and
-          // supported type is specified, check if it matches
-          // Otherwise ignore.
-          // (This is technically useless on Safari)
-          if (selectedMethod == 'basic-card' &&
-              modifier.data &&
-              modifier.data.supportedTypes) {
-            if (!selectedType ||
-                modifier.data.supportedTypes.indexOf(selectedType) === -1)
-              continue;
-          }
 
           if (modifier.additionalDisplayItems) {
             // Concatenate existing display items and additional ones
