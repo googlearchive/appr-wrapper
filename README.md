@@ -14,6 +14,8 @@
     limitations under the License.
 -->
 
+***This repository is no longer maintained.***
+
 # appr-wrapper: Payment Request wrapper for Apple Pay JS
 "appr-wrapper" wraps Apple Pay JS and allows you to write Payment Request API
 code to use the API.
